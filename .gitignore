@@ -1,0 +1,23 @@
+# IntelliJ #
+/.idea
+*.iml
+*.DS_Store
+
+#TestNG Results Output Directory
+/test-output
+out/logs/**
+out/BasketService/**
+
+#Build Output Directory
+/target
+/out
+
+#Maven shade settings
+dependency-reduced-pom.xml
+
+# Eclipse #
+.metadata
+local.properties
+.settings/
+.project
+.classpath

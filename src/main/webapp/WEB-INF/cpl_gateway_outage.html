@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CPL – exception monitor</title>
+  <!--css files-->
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/bootstrap-theme.min.css" rel="stylesheet">
+  <link href="css/jquery.dataTables.min.css" rel="stylesheet">
+  <link href="css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+  <link href="css/godaddy-salesheader.min.css" rel="stylesheet">
+  <link href="css/godaddy-uncore-sale.min.css" rel="stylesheet">
+  <link rel="shortcut icon" href="images/godaddy.ico">
+  <style>
+        div.container {
+            width: 90%;
+            margin: auto;
+        }
+        .container {
+            width: 970px;
+            max-width: 970px;
+         }
+  </style>
+</head>
+<body style="background-color:#E8E8E8">
+<section class="container">
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="ux-card">
+        <h1 style="text-align:center">CPL – gateway outage monitor</h1>
+        <div style="display:none">
+        <table>
+          <tbody>
+          <tr>
+            <!--<td colspan="2">-->
+            <!--<div style="padding-right:5px">-->
+            <!--<button id="allErrorLogs" type="button" class="btn btn-info">All Existing Error Logs</button>-->
+            <!--</div>-->
+            <!--</td>-->
+            <td>
+              <!--<div style="padding-left:5px">-->
+              <!--<button id="latestErrorLogs" type="button" class="btn btn-info">Latest Error Logs-->
+              <!--</button>-->
+              <!--</div>-->
+            </td>
+          </tr>
+          <tr>
+            <td>Date Range: Between</td>
+            <td>
+              <div class="input-group date form_date" data-date-format="yyyy-mm-dd"
+                   id="datetimepicker6" style="padding:2px">
+                <input type='text' class="form-control" id="startDate" readonly/>
+                <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-remove"></span>
+                                        </span>
+                <span class="input-group-addon">
+                                            <span class="glyphicon glyphicon-th"></span>
+                                        </span>
+              </div>
+            </td>
+            <td>And</td>
+            <td>
+              <div class="input-group date form_date" data-date-format="yyyy-mm-dd"
+                   id="datetimepicker7" style="padding:2px">
+                <input type='text' class="form-control" id="endDate" readonly/>
+                <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-remove"></span>
+                                        </span>
+                <span class="input-group-addon">
+                                            <span class="glyphicon glyphicon-th"></span>
+                                        </span>
+              </div>
+            </td>
+            <td align="right">
+              <button type="submit" class="btn btn-primary submit" id="searchValue">Search</button>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+        </div>
+
+        <br/>
+        <div id="which_column"></div>
+        <div id="sort_way" ></div>
+        <br/>
+        <table class="display" id="errorPurchaseLogs" width="100%">
+          <thead>
+          <tr>
+            <th name="b.processor">Processor</th>
+            <th name="b.payment">Payment</th>
+            <th name="b.response_code">Response code</th>
+            <th name="b.reason_code">Reason code</th>
+          </tr>
+          </thead>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</section>
+<div id="footer">
+  <div>
+    <div class="uxh-footer" data-reactroot="" data-reactid="1" data-react-checksum="1895965148">
+      <div class="uxh-footer-support" data-reactid="2">
+        <div class="uxh-container" data-reactid="3">
+          <h4 data-reactid="4">
+            <div data-reactid="5">
+                                <span data-reactid="8">
+                                    Any questions, please contact Jiachun Wang.<br/>
+                                    Email: jwang1@godaddy.com<br/>
+                                    Slack: <a href="https://godaddy.slack.com/messages/@jwang1"
+                                              style="color:inherit; text-decoration:none;">
+                                            https://godaddy.slack.com/messages/@jwang1</a>
+                                </span><br/>
+            </div>
+          </h4>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--js files-->
+    <script src="js/jquery-1.8.3.min.js"></script>
+    <script src="js/jquery.dataTables.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/bootstrap-datetimepicker.min.js"></script>
+    <script>
+       $(document).ready(function(){
+            $('#sort_way').val('asc');
+            $('#which_column').val('b.processor');
+
+            var table = renderer("/MonitorTool/cpl_gateway_outage_servlet");
+
+            $('#errorPurchaseLogs').on( 'draw.dt', function () {
+                 if(table.row(0).data())
+                 $("div.snapshotDate").html('');
+            } );
+
+            table.on( 'xhr', function () {
+
+                    var json = table.ajax.json();
+
+                    var startDate = json.startDate;
+                    if(startDate) {
+                        $('#startDate').val(startDate);
+                    }
+
+                    var endDate = json.endDate;
+                    if(endDate) {
+                        $('#endDate').val(endDate);
+                    }
+
+            } );
+
+             <!--initialize datetimepicker()-->
+            $('#datetimepicker6').datetimepicker({
+                weekStart: 1,
+                todayBtn:  1,
+                autoclose: 1,
+                todayHighlight: 1,
+                startView: 2,
+                minView: 2,
+                forceParse: 0
+            });
+            $('#datetimepicker7').datetimepicker({
+                weekStart: 1,
+                todayBtn:  1,
+                autoclose: 1,
+                todayHighlight: 1,
+                startView: 2,
+                minView: 2,
+                forceParse: 0
+            });
+
+            <!--search event-->
+            $('#searchValue').on('click', function() {
+                table.search(stringifyParams()).draw();
+            });
+
+            //unbind sort event, prevent sorting when header is clicked
+            $('#errorPurchaseLogs').unbind('click.DT');
+
+            //create your own click handler for the header
+            $('th').click(function(e) {
+                //here you can trigger a custom event
+
+                var column_this_time = $(this)[0].getAttribute('name');
+                if(column_this_time == $('#which_column').val() ){
+                  if($('#sort_way').val()=='asc'){
+                    $('#sort_way').val('desc');
+                  }else{
+                    $('#sort_way').val('asc');
+                  }
+                }else{
+                  $('#sort_way').val('asc');
+                  $('#which_column').val(column_this_time);
+                }
+
+                var which_column = $(this)[0].getAttribute('name');
+                var sort_way = $('#sort_way').val();
+
+                table.search(stringifyParams(which_column,sort_way)).draw();
+            });
+
+            //if you afterwards want to restablish sorting triggered by a click event
+            //here header "username" from example above
+            table.fnSortListener(document.getElementById('errorPurchaseLogs'), 1);
+
+             });
+
+       function stringifyParams(which_column,sort_way) {
+            var Params = {};
+            Params.which_column = which_column;
+            Params.sort_way = sort_way;
+
+            return JSON.stringify(Params);
+       }
+
+       <!--function to post request and render table-->
+       function renderer(url) {
+
+           return  $('#errorPurchaseLogs').DataTable({
+                "lengthMenu": [[50, 100, 200, -1], [50, 100, 200, "All"]],
+                "dom": 'lr<"snapshotDate">tip',
+                "processing": true,
+                "serverSide": true,
+                "ordering": true,
+                "ajax": {
+                    "url": url,
+                    "type": "POST",
+                },
+                "columns": [
+                    { "data": "processor"},
+                    { "data": "payment" },
+                    { "data": "response_code"},
+                    { "data": "reason_code"}
+                ],
+                "order": [[0, 'asc']]
+            });
+       }
+  </script>
+</body>
+</html>

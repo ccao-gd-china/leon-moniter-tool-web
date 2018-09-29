@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ECommErrorsForSOAP API Reseller</title>
+  <!--css files-->
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/bootstrap-theme.min.css" rel="stylesheet">
+  <link href="css/jquery.dataTables.min.css" rel="stylesheet">
+  <link href="css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+  <link href="css/godaddy-salesheader.min.css" rel="stylesheet">
+  <link href="css/godaddy-uncore-sale.min.css" rel="stylesheet">
+  <link rel="shortcut icon" href="images/godaddy.ico">
+  <style>
+        div.container {
+            width: 90%;
+            margin: auto;
+        }
+        .container {
+            width: 1570px;
+            max-width: 1570px;
+         }
+  </style>
+</head>
+<body style="background-color:#E8E8E8">
+<section class="container">
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="ux-card">
+        <h1 style="text-align:center">EComm Errors for SOAP API Reseller</h1>
+        <table>
+          <tbody>
+          <tr>
+            <!--<td colspan="2">-->
+            <!--<div style="padding-right:5px">-->
+            <!--<button id="allErrorLogs" type="button" class="btn btn-info">All Existing Error Logs</button>-->
+            <!--</div>-->
+            <!--</td>-->
+            <td>
+              <!--<div style="padding-left:5px">-->
+              <!--<button id="latestErrorLogs" type="button" class="btn btn-info">Latest Error Logs-->
+              <!--</button>-->
+              <!--</div>-->
+            </td>
+          </tr>
+          <tr>
+            <td>Date Range: Between</td>
+            <td>
+              <div class="input-group date form_date" data-date-format="yyyy-mm-dd"
+                   id="datetimepicker6" style="padding:2px">
+                <input type='text' class="form-control" id="startDate" readonly/>
+                <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-remove"></span>
+                                        </span>
+                <span class="input-group-addon">
+                                            <span class="glyphicon glyphicon-th"></span>
+                                        </span>
+              </div>
+            </td>
+            <td>And</td>
+            <td>
+              <div class="input-group date form_date" data-date-format="yyyy-mm-dd"
+                   id="datetimepicker7" style="padding:2px">
+                <input type='text' class="form-control" id="endDate" readonly/>
+                <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-remove"></span>
+                                        </span>
+                <span class="input-group-addon">
+                                            <span class="glyphicon glyphicon-th"></span>
+                                        </span>
+              </div>
+            </td>
+            <td align="right">
+              <button type="submit" class="btn btn-primary submit" id="searchValue">Search</button>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+        <br/>
+        <div id="error_description"></div>
+        <div id="which_column"></div>
+        <div id="sort_way" ></div>
+        <br/>
+        <table class="display" id="errorPurchaseLogs" width="100%">
+          <thead>
+          <tr>
+            <th width="75" name="b.order_id" >Order ID</th>
+            <th width="100" name="b.shopper_id" >Shopper ID</th>
+            <th name="b.source" >Source</th>
+            <th name="b.processor">Processor</th>
+            <th name="b.payment">Type</th>
+            <th name="b.payment_type">Sub-type</th>
+            <th name="b.billing_country_code">Country</th>
+            <th name="b.gatewayActionType">GW Action</th>
+            <th name="b.transactionCurrencyType">Currency</th>
+          </tr>
+          </thead>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</section>
+<div id="footer">
+  <div>
+    <div class="uxh-footer" data-reactroot="" data-reactid="1" data-react-checksum="1895965148">
+      <div class="uxh-footer-support" data-reactid="2">
+        <div class="uxh-container" data-reactid="3">
+          <h4 data-reactid="4">
+            <div data-reactid="5">
+                                <span data-reactid="8">
+                                    Any questions, please contact Jiachun Wang.<br/>
+                                    Email: jwang1@godaddy.com<br/>
+                                    Slack: <a href="https://godaddy.slack.com/messages/@jwang1"
+                                              style="color:inherit; text-decoration:none;">
+                                            https://godaddy.slack.com/messages/@jwang1</a>
+                                </span><br/>
+            </div>
+          </h4>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--js files-->
+<script src="js/jquery-1.8.3.min.js"></script>
+<script src="js/jquery.dataTables.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/bootstrap-datetimepicker.min.js"></script>
+<script>
+       var snapshotId;
+       $(document).ready(function(){
+            $('#sort_way').val('asc');
+            $('#which_column').val('b.order_id');
+
+            var table = renderer("/MonitorTool/ECommServlet");
+
+            $('#errorPurchaseLogs').on( 'draw.dt', function () {
+                 if(table.row(0).data())
+                 $("div.snapshotDate").html('');
+            } );
+
+            table.on( 'xhr', function () {
+
+                    var json = table.ajax.json();
+                    snapshotId = json.snapshotId;
+                    if(snapshotId != $('#snapshotId').val()) {
+                        $('#snapshotId').val(snapshotId);
+                        var arr =  json.privateLabelIds;
+                            if(arr){
+                                createOptions(arr);
+                            }
+                    }
+
+                    var startDate = json.startDate;
+                    if(startDate) {
+                        $('#startDate').val(startDate);
+                    }
+
+                    var endDate = json.endDate;
+                    if(endDate) {
+                        $('#endDate').val(endDate);
+                    }
+
+                    var error_description = json.error_description;
+                    if(error_description) {
+                      $("#error_description").html('<b >Error description : </b>'+ error_description );
+                    }
+            } );
+
+             <!--initialize datetimepicker()-->
+            $('#datetimepicker6').datetimepicker({
+                weekStart: 1,
+                todayBtn:  1,
+                autoclose: 1,
+                todayHighlight: 1,
+                startView: 2,
+                minView: 2,
+                forceParse: 0
+            });
+            $('#datetimepicker7').datetimepicker({
+                weekStart: 1,
+                todayBtn:  1,
+                autoclose: 1,
+                todayHighlight: 1,
+                startView: 2,
+                minView: 2,
+                forceParse: 0
+            });
+
+            <!--search event-->
+            $('#searchValue').on('click', function() {
+                table.search(stringifyParams()).draw();
+            });
+
+            //unbind sort event, prevent sorting when header is clicked
+            $('#errorPurchaseLogs').unbind('click.DT');
+
+            //create your own click handler for the header
+            $('th').click(function(e) {
+                //here you can trigger a custom event
+
+                var column_this_time = $(this)[0].getAttribute('name');
+                if(column_this_time == $('#which_column').val() ){
+                  if($('#sort_way').val()=='asc'){
+                    $('#sort_way').val('desc');
+                  }else{
+                    $('#sort_way').val('asc');
+                  }
+                }else{
+                  $('#sort_way').val('asc');
+                  $('#which_column').val(column_this_time);
+                }
+
+                var which_column = $(this)[0].getAttribute('name');
+                var sort_way = $('#sort_way').val();
+
+                table.search(stringifyParams(which_column,sort_way)).draw();
+            });
+
+            //if you afterwards want to restablish sorting triggered by a click event
+            //here header "username" from example above
+            table.fnSortListener(document.getElementById('errorPurchaseLogs'), 1);
+
+             });
+
+       function stringifyParams(which_column,sort_way) {
+            var Params = {};
+
+                Params.start_date = $('#startDate').val();
+                Params.end_date = $('#endDate').val();
+                Params.status_code = $('#status_code').val();
+
+                Params.which_column = which_column;
+                Params.sort_way = sort_way;
+
+            return JSON.stringify(Params);
+       }
+
+       <!--function to post request and render table-->
+       function renderer(url) {
+
+           return  $('#errorPurchaseLogs').DataTable({
+                "lengthMenu": [[50, 100, 200, -1], [50, 100, 200, "All"]],
+                "dom": 'lr<"snapshotDate">tip',
+                "processing": true,
+                "serverSide": true,
+                "ordering": true,
+                "ajax": {
+                    "url": url,
+                    "type": "POST",
+                },
+                "columns": [
+                    { "data": "order_id" },
+                    { "data": "shopper_id" },
+                    { "data": "source" },
+                    { "data": "processor"},
+                    { "data": "payment" },
+                    { "data": "payment_type"},
+                    { "data": "billing_country_code"},
+                    { "data": "gatewayActionType"},
+                    { "data": "transactionCurrencyType"}
+                ],
+                "order": [[0, 'asc']]
+            });
+       }
+  </script>
+</body>
+</html>

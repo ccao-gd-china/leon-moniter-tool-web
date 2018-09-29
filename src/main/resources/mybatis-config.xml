@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+  <settings>
+    <setting name="cacheEnabled" value="true"/>
+    <setting name="lazyLoadingEnabled" value="true"/>
+  </settings>
+
+  <environments default="Local">
+    <environment id="Local">
+      <transactionManager type="JDBC"/>
+      <dataSource type="POOLED">
+        <property name="driver" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
+        <property name="url" value="jdbc:sqlserver://localhost;databaseName=Payment"/>
+        <property name="username" value="mt"/>
+        <property name="password" value="Password_3"/>
+      </dataSource>
+    </environment>
+    <environment id="OTE">
+      <transactionManager type="JDBC"/>
+      <dataSource type="POOLED">
+        <property name="driver" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
+        <property name="url"
+          value="jdbc:sqlserver://P3OWGDSQL01;databaseName=goDaddyAPI;integratedSecurity=true;"/>
+      </dataSource>
+    </environment>
+    <environment id="TEST">
+      <transactionManager type="JDBC"/>
+      <dataSource type="POOLED">
+        <property name="driver" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
+        <property name="url"
+          value="jdbc:sqlserver://P3TWSQL02\PSQL;databaseName=goDaddyAPI;integratedSecurity=true;"/>
+      </dataSource>
+    </environment>
+    <environment id="PROD">
+      <transactionManager type="JDBC"/>
+      <dataSource type="POOLED">
+        <property name="driver" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
+        <property name="url"
+          value="jdbc:sqlserver://P3PWROSQL;databaseName=goDaddyAPI;integratedSecurity=true;"/>
+      </dataSource>
+    </environment>
+  </environments>
+
+  <mappers>
+    <mapper resource="mappers/fulfillment/ErrorOrderRequestXmlMapper.xml"/>
+    <mapper resource="mappers/fulfillment/SnapshotMapper.xml"/>
+    <mapper resource="mappers/fulfillment/ErrorOrderRequestXmlCustomMapper.xml"/>
+    <mapper resource="mappers/cpl/CPLCustomMapper.xml"/>
+  </mappers>
+
+</configuration>

@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ResellerErrorOrderRequestsInfo</title>
+  <!--css files-->
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/bootstrap-theme.min.css" rel="stylesheet">
+  <link href="css/jquery.dataTables.min.css" rel="stylesheet">
+  <link href="css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+  <link href="css/godaddy-salesheader.min.css" rel="stylesheet">
+  <link href="css/godaddy-uncore-sale.min.css" rel="stylesheet">
+  <link rel="shortcut icon" href="images/godaddy.ico">
+  <style>
+    div.container {
+      width: 90%;
+      margin: auto;
+    }
+
+    td.details-control {
+      background: url('images/detail_open.png') no-repeat center center;
+      cursor: pointer;
+    }
+
+    tr.shown td.details-control {
+      background: url('images/detail_close.png') no-repeat center center;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body style="background-color:#E8E8E8">
+<section class="container">
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="ux-card">
+        <h1 style="text-align:center">Reseller Error Order Requests Info</h1>
+        <table>
+          <tbody>
+          <tr>
+            <td>
+              <div style="padding-right:5px">
+                <button id="allErrorOrders" type="button" class="btn btn-info">All Existing Error
+                  Orders
+                </button>
+              </div>
+            </td>
+            <td>
+              <div style="padding-left:5px">
+                <button id="latestErrorOrders" type="button" class="btn btn-info">Latest Error
+                  Orders
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>Date Range: Between</td>
+            <td>
+              <div class="input-group date form_date" data-date-format="yyyy-mm-dd"
+                   id="datetimepicker6" style="padding:2px">
+                <input type='text' class="form-control" id="startDate" readonly/>
+                <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-remove"></span>
+                                        </span>
+                <span class="input-group-addon">
+                                            <span class="glyphicon glyphicon-th"></span>
+                                        </span>
+              </div>
+            </td>
+            <td>And</td>
+            <td>
+              <div class="input-group date form_date" data-date-format="yyyy-mm-dd"
+                   id="datetimepicker7" style="padding:2px">
+                <input type='text' class="form-control" id="endDate" readonly/>
+                <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-remove"></span>
+                                        </span>
+                <span class="input-group-addon">
+                                            <span class="glyphicon glyphicon-th"></span>
+                                        </span>
+              </div>
+            </td>
+            <!--</tr>-->
+            <!--<tr>-->
+            <!--<td>PrivateLabel ID:</td>-->
+            <!--<td>-->
+            <!--<div style="padding:2px" class="col-md-6">-->
+            <!--<select class="form-control" id="privateLabelId">-->
+            <!--<option>All</option>-->
+            <!--</select>-->
+            <!--</div>-->
+            <!--</td>-->
+            <td><input id="snapshotId" type="hidden" value="0"></td>
+          </tr>
+          </tbody>
+        </table>
+        <!--<p/>-->
+        <!--<table class="sort" id="sort">-->
+          <!--<tr>-->
+            <!--<th style="padding-right:50px">Sort :</th>-->
+            <!--<th style="padding-right:50px">Severity : <input type="checkbox" name="severity_sort" id="severity_sort"-->
+                                                             <!--value="0" style="vertical-align: text-top;"></th>-->
+            <!--<th style="padding-right:50px">PLID : <input type="checkbox" name="plid_sort" id="plid_sort" value="0"-->
+                                                         <!--style="vertical-align: text-top"></th>-->
+            <!--<th>ErrorMessage : <input type="checkbox" name="message_sort" id="message_sort" value="0"-->
+                                      <!--style="vertical-align: text-top"></th>-->
+          <!--</tr>-->
+
+        <!--</table>-->
+        <p/>
+        <table class="filter" id="filter">
+          <tr>
+            <td style="padding-right: 42px;">Filter :</td>
+            <th style="padding-right: 50px;">Severity :
+              <select id="filter_severity">
+                <option value="">ALL</option>
+                <option value="S1">S1</option>
+                <option value="S3">S3</option>
+                <option value="Unkown">Unkown</option>
+              </select>
+            </th>
+            <th>PLID :
+              <input type="text" id="filter_plid" value="">
+            </th>
+          </tr>
+        </table>
+        <p/>
+        <table>
+          <tr>
+            <th>Error Message :
+              <input type="text" id="filter_message" value="" style="width: 550px">
+            </th>
+            <td style="padding-right: 10px"></td>
+            <td align="right">
+              <button type="submit" class="btn btn-primary submit" id="searchValue">Search</button>
+            </td>
+            <td style="padding-right: 10px"></td>
+            <td>
+              <button type="submit" class="btn btn-primary" data-loading-text="Loading..." id="download" >DOWNLOAD</button>
+            </td>
+        </table>
+        <br/>
+        <table class="display" id="errorOrderRequests" width="100%">
+          <thead>
+          <tr>
+            <th width="25"></th>
+            <th width="75">Order Id</th>
+            <th width="75">PLID</th>
+            <th width="75">Severity</th>
+            <th width="200">Create Date</th>
+            <th width="100">Order Status</th>
+            <th>Error Message</th>
+          </tr>
+          </thead>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+<div id="footer">
+  <div>
+    <div class="uxh-footer" data-reactroot="" data-reactid="1" data-react-checksum="1895965148">
+      <div class="uxh-footer-support" data-reactid="2">
+        <div class="uxh-container" data-reactid="3">
+          <h4 data-reactid="4">
+            <div data-reactid="5">
+                                <span data-reactid="8">
+                                    Any questions, please contact Jiachun Wang.<br/>
+                                    Email: jwang1@godaddy.com<br/>
+                                    Slack: <a href="https://godaddy.slack.com/messages/@jwang1"
+                                              style="color:inherit; text-decoration:none;">
+                                            https://godaddy.slack.com/messages/@jwang1</a>
+                                </span><br/>
+            </div>
+          </h4>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--js files-->
+<script src="js/jquery-1.8.3.min.js"></script>
+<script src="js/jquery.dataTables.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/bootstrap-datetimepicker.min.js"></script>
+<script>
+  var snapshotId;
+  $(document).ready(function () {
+    var table = renderer("/MonitorTool/FulfillmentServlet");
+    $('#errorOrderRequests').on('draw.dt', function () {
+      //if(table.row(0).data())
+      //$("div.snapshotDate").html('<b class=col-sm-offset-1-1>Snapshot Time: '+ table.row(0).data().snapshotTime +'</b>');
+    });
+
+    table.on('xhr', function () {
+      var json = table.ajax.json();
+      <!--snapshotId = json.snapshotId;-->
+      <!--if(snapshotId != $('#snapshotId').val()) {-->
+      <!--$('#snapshotId').val(snapshotId);-->
+      <!--var arr =  json.privateLabelIds;-->
+      <!--if(arr){-->
+      <!--createOptions(arr);-->
+      <!--}-->
+      <!--}-->
+      var selectEle = $('#privateLabelId');
+      if (selectEle.children().length <= 1) {
+        var arr = json.privateLabelIds;
+        if (arr) {
+          createOptions(arr);
+        }
+      }
+
+      var startDate = json.startDate;
+      if (startDate) {
+        $('#startDate').val(startDate);
+      }
+
+      var endDate = json.endDate;
+      if (endDate) {
+        $('#endDate').val(endDate);
+      }
+    });
+
+    <!--initialize datetimepicker()-->
+    $('#datetimepicker6').datetimepicker({
+      weekStart: 1,
+      todayBtn: 1,
+      autoclose: 1,
+      todayHighlight: 1,
+      startView: 2,
+      minView: 2,
+      forceParse: 0
+    });
+    $('#datetimepicker7').datetimepicker({
+      weekStart: 1,
+      todayBtn: 1,
+      autoclose: 1,
+      todayHighlight: 1,
+      startView: 2,
+      minView: 2,
+      forceParse: 0
+    });
+
+    <!--row expand and collapse-->
+    $('#errorOrderRequests tbody').on('click', 'td.details-control', function () {
+
+      var tr = $(this).closest('tr');
+      var row = table.row(tr);
+
+      if (row.child.isShown()) {
+        // This row is already open - close it
+        row.child.hide();
+        tr.removeClass('shown');
+      } else {
+        // Open this row
+        row.child(childRows(row.data())).show();
+        tr.addClass('shown');
+      }
+    });
+
+    $("#download").on('click',
+      function() {
+        postDownLoadFile({
+          url: "/MonitorTool/FulfillmentDownloadServlet",
+          type: "POST",
+          dataType: "octets/stream",
+          contentType: "application/x-www-form-urlencoded",
+          data:{
+            startDate :  $('#startDate').val(),
+            endDate : $('#endDate').val(),
+            filterSeverity : $('#filter_severity').val(),
+            filterPLID : $('#filter_plid').val(),
+            filterMessage : $('#filter_message').val()
+          }
+        });
+      });
+
+    var postDownLoadFile = function (options) {
+      var config = $.extend(true, { method: 'post' }, options);
+      var $iframe = $('<iframe id="down-file-iframe" />');
+      var $form = $('<form target="down-file-iframe" method="' + config.method + '" />');
+      $form.attr('action', config.url);
+      for (var key in config.data) {
+        $form.append('<input type="hidden" name="' + key + '" value="' + config.data[key] + '" />');
+      }
+      $iframe.append($form);
+      $(document.body).append($iframe);
+      $form[0].submit();
+      $iframe.remove();
+    }
+
+
+    <!--search event-->
+    $('#allErrorOrders').on('click', function () {
+      $('#startDate').val('');
+      $('#endDate').val('');
+      //$('#privateLabelId').val($('#privateLabelId').find('option').first().val());
+
+      table.search(stringifyParams('all_existing_error_orders')).draw();
+    });
+
+    <!--search event-->
+    $('#latestErrorOrders').on('click', function () {
+      $('#startDate').val('');
+      $('#endDate').val('');
+      //$('#privateLabelId').val($('#privateLabelId').find('option').first().val());
+
+      table.search(stringifyParams('latest_error_orders')).draw();
+    });
+
+    <!--search event-->
+    $('#searchValue').on('click', function () {
+
+      table.search(stringifyParams()).draw();
+    });
+  });
+
+  function sendDownloadClient() {
+    $.ajax({
+      url: "/MonitorTool/FulfillmentDownloadServlet",
+      type: "POST",
+      dataType: "octets/stream",
+      contentType: "application/x-www-form-urlencoded",
+      data:{
+        startDate :  $('#startDate').val(),
+        endDate : $('#endDate').val(),
+        filterSeverity : $('#filter_severity').val(),
+        filterPLID : $('#filter_plid').val(),
+        filterMessage : $('#filter_message').val()
+      },
+      success: function (redata) {
+        var $a = $("<a>");
+        $a.attr("href",redata.data.file);
+        $a.attr("download",redata.data.filename);
+        $("body").append($a);
+        $a[0].click();
+        $a.remove();
+        alert("success!")
+      }
+    });
+
+  }
+
+  function stringifyParams(version) {
+    var Params = {};
+    <!--if(version == 'latest') {-->
+    <!--Params.snapshotId = version;-->
+    <!--}else {-->
+    <!--Params.snapshotId = $('#snapshotId').val();-->
+    <!--}-->
+
+    Params.my_flag = version;
+    Params.start_date = $('#startDate').val();
+    Params.end_date = $('#endDate').val();
+    Params.privateLabel_id = $('#privateLabelId option:selected').val();
+    Params.filter_severity = $('#filter_severity option:selected').val();
+    Params.filter_plid = $('#filter_plid').val();
+    Params.filter_message = $('#filter_message').val();
+
+    return JSON.stringify(Params);
+  }
+
+
+  <!--function to post request and render table-->
+  function renderer(url) {
+    return $('#errorOrderRequests').DataTable({
+      "dom": 'lr<"snapshotDate">tip',
+      "processing": true,
+      "serverSide": true,
+      "ordering": false,
+      "ajax": {
+        "url": url,
+        "type": "POST",
+      },
+      "columns": [
+        {
+          "className": 'details-control',
+          "orderable": false,
+          "data": null,
+          "defaultContent": ''
+        },
+        {"data": "order_id"},
+        {"data": "privateLabelId"},
+        {"data": "severity"},
+        {"data": "createDate"},
+        {"data": "api_orderRequestStatusId"},
+        {"data": "messageText"},
+      ],
+      "order": [[1, 'asc']]
+    });
+  }
+
+  <!--function to add child rows-->
+  function childRows(d) {
+
+    <!-- `d` is the original data object for the row-->
+    return '<table cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">' +
+      '<tr>' +
+      '<td><b>Error Message</b>:</td>' +
+      '<td>' + d.messageText + '</td>' +
+      '</tr>' +
+      '<tr>' +
+      '<td><b>Order XML</b>:</td>' +
+      '<td><pre>' + d.orderXML + '</pre></td>' +
+      '</tr>' +
+      '</table>';
+  };
+
+  function createOptions(arr) {
+    var select = $('#privateLabelId');
+    select.empty().append('<option >All</option>');
+    for (var i = 0; i < arr.length; i++) {
+      var option = document.createElement("option");
+      option.text = arr[i];
+      select.append(option);
+    }
+  }
+</script>
+</body>
+</html>

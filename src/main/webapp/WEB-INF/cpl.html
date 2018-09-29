@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CPL – Gateway action monitoring</title>
+  <!--css files-->
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/bootstrap-theme.min.css" rel="stylesheet">
+  <link href="css/jquery.dataTables.min.css" rel="stylesheet">
+  <link href="css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+  <link href="css/godaddy-salesheader.min.css" rel="stylesheet">
+  <link href="css/godaddy-uncore-sale.min.css" rel="stylesheet">
+  <link rel="shortcut icon" href="images/godaddy.ico">
+  <style>
+        div.container {
+            width: 90%;
+            margin: auto;
+        }
+
+  </style>
+</head>
+<body style="background-color:#E8E8E8">
+<section class="container">
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="ux-card">
+        <h1 style="text-align:center">CPL – Gateway action monitoring</h1>
+        <table>
+          <tbody>
+          <tr>
+            <!--<td colspan="2">-->
+            <!--<div style="padding-right:5px">-->
+            <!--<button id="allErrorLogs" type="button" class="btn btn-info">All Existing Error Logs</button>-->
+            <!--</div>-->
+            <!--</td>-->
+            <td>
+              <div style="padding-left:5px">
+                <button id="latestErrorLogs" type="button" class="btn btn-info">Latest Error Logs
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>Date Range: Between</td>
+            <td>
+              <div class="input-group date form_date" data-date-format="yyyy-mm-dd"
+                   id="datetimepicker6" style="padding:2px">
+                <input type='text' class="form-control" id="startDate" readonly/>
+                <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-remove"></span>
+                                        </span>
+                <span class="input-group-addon">
+                                            <span class="glyphicon glyphicon-th"></span>
+                                        </span>
+              </div>
+            </td>
+            <td>And</td>
+            <td>
+              <div class="input-group date form_date" data-date-format="yyyy-mm-dd"
+                   id="datetimepicker7" style="padding:2px">
+                <input type='text' class="form-control" id="endDate" readonly/>
+                <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-remove"></span>
+                                        </span>
+                <span class="input-group-addon">
+                                            <span class="glyphicon glyphicon-th"></span>
+                                        </span>
+              </div>
+            </td>
+            <td align="right">
+              <button type="submit" class="btn btn-primary submit" id="searchValue">Search</button>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+        <br/>
+        <table class="display" id="errorPurchaseLogs" width="100%">
+          <thead>
+          <tr>
+            <th width="75">Order ID</th>
+            <th width="100">Shopper ID</th>
+            <th>Date Entered</th>
+            <th>Source</th>
+            <th>Processor</th>
+            <th>Gateway Raw</th>
+          </tr>
+          </thead>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</section>
+<div id="footer">
+  <div>
+    <div class="uxh-footer" data-reactroot="" data-reactid="1" data-react-checksum="1895965148">
+      <div class="uxh-footer-support" data-reactid="2">
+        <div class="uxh-container" data-reactid="3">
+          <h4 data-reactid="4">
+            <div data-reactid="5">
+                                <span data-reactid="8">
+                                    Any questions, please contact Jiachun Wang.<br/>
+                                    Email: jwang1@godaddy.com<br/>
+                                    Slack: <a href="https://godaddy.slack.com/messages/@jwang1"
+                                              style="color:inherit; text-decoration:none;">
+                                            https://godaddy.slack.com/messages/@jwang1</a>
+                                </span><br/>
+            </div>
+          </h4>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <!--js files-->
+    <script src="js/jquery-1.8.3.min.js"></script>
+    <script src="js/jquery.dataTables.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/bootstrap-datetimepicker.min.js"></script>
+    <script>
+       var snapshotId;
+       $(document).ready(function(){
+            var table = renderer("/MonitorTool/CPLServlet");
+
+            $('#errorPurchaseLogs').on( 'draw.dt', function () {
+                 if(table.row(0).data())
+                 $("div.snapshotDate").html('<b class=col-sm-offset-1-1>Snapshot Time: '+ table.row(0).data().snapshotTime +'</b>');
+            } );
+
+            table.on( 'xhr', function () {
+                    var json = table.ajax.json();
+                    snapshotId = json.snapshotId;
+                    if(snapshotId != $('#snapshotId').val()) {
+                        $('#snapshotId').val(snapshotId);
+                        var arr =  json.privateLabelIds;
+                            if(arr){
+                                createOptions(arr);
+                            }
+                    }
+
+                    var startDate = json.startDate;
+                    if(startDate) {
+                        $('#startDate').val(startDate);
+                    }
+
+                    var endDate = json.endDate;
+                    if(endDate) {
+                        $('#endDate').val(endDate);
+                    }
+
+            } );
+
+             <!--initialize datetimepicker()-->
+            $('#datetimepicker6').datetimepicker({
+                weekStart: 1,
+                todayBtn:  1,
+                autoclose: 1,
+                todayHighlight: 1,
+                startView: 2,
+                minView: 2,
+                forceParse: 0
+            });
+            $('#datetimepicker7').datetimepicker({
+                weekStart: 1,
+                todayBtn:  1,
+                autoclose: 1,
+                todayHighlight: 1,
+                startView: 2,
+                minView: 2,
+                forceParse: 0
+            });
+
+            <!--search event-->
+            $('#allErrorLogs').on('click', function() {
+                $('#startDate').val('');
+                $('#endDate').val('');
+
+                table.search(stringifyParams()).draw();
+            });
+
+            <!--search event-->
+            $('#latestErrorLogs').on('click', function() {
+                $('#startDate').val('');
+                $('#endDate').val('');
+
+                table.search(stringifyParams('latest')).draw();
+            });
+
+            <!--search event-->
+            $('#searchValue').on('click', function() {
+                table.search(stringifyParams()).draw();
+            });
+       });
+
+       function stringifyParams(version) {
+            var Params = {};
+                if(version == 'latest') {
+                    Params.snapshotId = version;
+                }else {
+                    Params.snapshotId = $('#snapshotId').val();
+                }
+                Params.start_date = $('#startDate').val();
+                Params.end_date = $('#endDate').val();
+
+            return JSON.stringify(Params);
+       }
+
+       <!--function to post request and render table-->
+       function renderer(url) {
+
+           return  $('#errorPurchaseLogs').DataTable({
+                "dom": 'lr<"snapshotDate">tip',
+                "processing": true,
+                "serverSide": true,
+                "ordering": false,
+                "ajax": {
+                    "url": url,
+                    "type": "POST",
+                },
+                "columns": [
+                    { "data": "order_id" },
+                    { "data": "shopper_id" },
+                    { "data": "date_entered" },
+                    { "data": "source" },
+                    { "data": "processor"},
+                    { "data": "gateway_raw"},
+                ],
+                "order": [[1, 'asc']]
+            });
+       }
+  </script>
+</body>
+</html>

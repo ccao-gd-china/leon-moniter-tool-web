@@ -1,0 +1,621 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.godaddy.ecomm.dao.cpl.CPLCustomMapper">
+  <select id="getErrorPurchaseLogs" resultType="com.godaddy.ecomm.base.cpl.ErrorPurchaseLog">
+    SELECT e.*, s.snapshotTime
+    FROM commonPurchaseLog e, CPLSnapshot s
+    WHERE e.snapshot_id = s.snapshot_id
+    <if test="snapshot_id != 0">
+      AND e.snapshot_id = #{snapshot_id}
+    </if>
+    <if test="snapshot_id == 0">
+      AND e.snapshot_id = (
+      SELECT TOP (1)
+      snapshot_id
+      FROM CPLSnapshot
+      ORDER BY snapshot_id DESC)
+    </if>
+    ORDER BY e.order_id DESC
+    OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+  </select>
+
+  <select id="getALLCPLISCRefundLogs" resultType="com.godaddy.ecomm.base.cpl.CPLISCRefundLog">
+    SELECT *
+    FROM CPLISCRefundLog
+    <where>
+      <if test="startDate != null">
+        date_entered >= #{startDate}
+      </if>
+      <if test="endDate != null">
+        AND date_entered &lt;= #{endDate}
+      </if>
+    </where>
+    ORDER BY order_id DESC
+    OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+  </select>
+
+  <select id="get_exception_monitor_str" resultType="string">
+    SELECT data
+    FROM usefulDate
+    where item = 'home_page_exception_monitor'
+  </select>
+
+  <select id="getAllErrorPurchaseLogs" resultType="com.godaddy.ecomm.base.cpl.ErrorPurchaseLog">
+    SELECT e.*
+    FROM commonPurchaseLog e
+    where date_entered > GETDATE()-3
+    ORDER BY e.order_id DESC
+    OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+  </select>
+
+  <select id="getCPLAutorenewalByLatestSnapshotId"
+          resultType="com.godaddy.ecomm.base.cpl.CPLGatewaySelectionFailureForAutorenewal">
+    SELECT *
+    FROM CPLGatewaySelectionFailureForAutorenewal
+    where snapshot_id =(select max(snapshot_Id) from [CPLGatewaySelectionFailureForAutorenewal]
+    where date_entered >
+    GETDATE()-3)
+    ORDER BY order_id DESC
+    OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+  </select>
+
+  <select id="getCPLISCRefundLogsByLatestSnapshotId"
+          resultType="com.godaddy.ecomm.base.cpl.CPLISCRefundLog">
+    SELECT *
+    FROM CPLISCRefundLog
+    where snapshot_id =(select max(snapshot_Id) from [CPLISCRefundLog] where date_entered >
+    GETDATE()-3)
+    ORDER BY order_id DESC
+    OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+  </select>
+
+  <select id="getErrorPurchaseLogsByLatestSnapshotId"
+          resultType="com.godaddy.ecomm.base.cpl.ErrorPurchaseLog">
+    SELECT *
+    FROM commonPurchaseLog
+    where snapshot_id =(select max(snapshot_Id) from commonPurchaseLog where date_entered >
+    GETDATE()-3)
+    ORDER BY order_id DESC
+    OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+  </select>
+
+  <select id="getCount" resultType="int">
+    SELECT count(*)
+    <if test="dbName == 'commonPurchaseLog'.toString()">
+      FROM commonPurchaseLog
+    </if>
+    <if test="dbName == 'CPLISCRefundLog'.toString()">
+      FROM CPLISCRefundLog
+    </if>
+    <if test="dbName == 'CPLAutorenewalLog'.toString()">
+      FROM CPLGatewaySelectionFailureForAutorenewal
+    </if>
+    <if test="dbName == 'errorOrderRequestXml'.toString()">
+      FROM errorOrderRequestXml
+    </if>
+    <if test="dbName == 'monitor_cpl_payment_gateway_outage'.toString()">
+      FROM monitor_cpl_payment_gateway_outage
+    </if>
+    <where>
+      <if test="startDate != null">
+        date_entered >= #{startDate}
+      </if>
+      <if test="endDate != null">
+        AND date_entered &lt;= #{endDate}
+      </if>
+    </where>
+  </select>
+
+  <select id="get_cpl_gateway_selection_failure_details_count" resultType="int">
+    SELECT count(*)
+    FROM CPLGatewaySelectionFailureForAutorenewal a left join commonPurchaseLogWithSomeKeyFields b
+    on a.order_id = b.order_id
+    <where>
+      <if test="order_id != null">
+        a.order_id = #{order_id}
+      </if>
+      <if test="shopper_id != null">
+        a.shopper_id = #{shopper_id}
+      </if>
+    </where>
+  </select>
+
+  <select id="get_auto_refund_data_with_time_limit_from_local_db" resultType="com.godaddy.ecomm.base.cpl.AutoRefund">
+    select * from autoRefund
+    <where>
+      <if test="startDate != null">
+        and PRIOR_TIME > #{startDate}
+      </if>
+      <if test="endDate != null">
+        AND PRIOR_TIME &lt;= #{endDate}
+      </if>
+    </where>
+  </select>
+
+  <select id="get_all_cpl_data_with_time_limit_from_local_db"
+          resultType="com.godaddy.ecomm.base.cpl.CommonPurchaseLogWithSomeKeyFields">
+    SELECT *
+    FROM commonPurchaseLogWithSomeKeyFields
+    <where>
+      <if test="startDate != null">
+        and date_entered > #{startDate}
+      </if>
+      <if test="endDate != null">
+        AND date_entered &lt;= #{endDate}
+      </if>
+    </where>
+  </select>
+
+  <select id="get_all_common_response_reason_list" resultType="com.godaddy.ecomm.base.cpl.CommonResponseReason">
+    SELECT response_code,reason_code,error_description
+    FROM commonResponseReasonForcplExceptionMonitor
+  </select>
+
+  <select id="get_data_from_db_usefulDate" resultType="string">
+    SELECT data
+    FROM usefulDate
+    where
+    <if test="which_field == 'home_page_outage_num'.toString()">
+       item = 'home_page_outage_num'
+    </if>
+  </select>
+
+  <select id="getIndexCount" resultType="int">
+  SELECT count(*)
+  <if test="dbName == 'commonPurchaseLog'.toString()">
+    FROM commonPurchaseLog where date_entered >= getDate()-3
+  </if>
+  <if test="dbName == 'CPLISCRefundLog'.toString()">
+    FROM CPLISCRefundLog where date_entered >= getDate()-3
+  </if>
+  <if test="dbName == 'CPLAutorenewalLog'.toString()">
+    FROM CPLGatewaySelectionFailureForAutorenewal where date_entered >= getDate()-3
+  </if>
+  <if test="dbName == 'errorOrderRequestXml'.toString()">
+    FROM errorOrderRequestXml where createDate >= getDate()-3
+  </if>
+</select>
+
+  <select id="getTime" resultType="string">
+    <choose>
+      <when test="up_down == 'start_time'.toString()">
+        <if test="dbName=='commonPurchaseLog'.toString()">
+          select min(date_entered) time
+          FROM commonPurchaseLog where date_entered > GETDATE()-3
+        </if>
+        <if test="dbName == 'CPLISCRefundLog'.toString()">
+          select min(date_entered) time
+          FROM CPLISCRefundLog where date_entered > GETDATE()-3
+        </if>
+        <if test="dbName == 'CPLAutorenewalLog'.toString()">
+          select min(date_entered) time
+          FROM CPLGatewaySelectionFailureForAutorenewal where date_entered > GETDATE()-3
+        </if>
+        <if test="dbName == 'errorOrderRequestXml'.toString()">
+          select min(createDate) time
+          FROM errorOrderRequestXml where createDate > GETDATE()-2
+        </if>
+      </when>
+      <when test="up_down == 'end_time'.toString()">
+        <if test="dbName=='commonPurchaseLog'.toString()">
+          select max(date_entered) time
+          FROM commonPurchaseLog where date_entered > GETDATE()-3
+        </if>
+        <if test="dbName == 'CPLISCRefundLog'.toString()">
+          select max(date_entered) time
+          FROM CPLISCRefundLog where date_entered > GETDATE()-3
+        </if>
+        <if test="dbName == 'CPLAutorenewalLog'.toString()">
+          select max(date_entered) time
+          FROM CPLGatewaySelectionFailureForAutorenewal where date_entered > GETDATE()-3
+        </if>
+        <if test="dbName == 'errorOrderRequestXml'.toString()">
+          select max(createDate) time
+          FROM errorOrderRequestXml where createDate > GETDATE()-2
+        </if>
+      </when>
+    </choose>
+  </select>
+
+  <select id="getLastUpdateTime" resultType="string">
+    select time from preserveTime
+    where
+    <if test="fieldName=='collect_time_of_fulfillment_for_index_page'.toString()">
+      function_part = 'collect_time_of_fulfillment_for_index_page'
+    </if>
+    <if test="fieldName == 'collect_time_of_cpl_incorrect_gateway_for_index_page'.toString()">
+      function_part = 'collect_time_of_cpl_incorrect_gateway_for_index_page'
+    </if>
+    <if test="fieldName == 'collect_time_of_cpl_duplicate_isc_refund_for_index_page'.toString()">
+      function_part = 'collect_time_of_cpl_duplicate_isc_refund_for_index_page'
+    </if>
+    <if
+      test="fieldName == 'collect_time_of_cpl_gateway_selection_failure_for_index_page'.toString()">
+      function_part = 'collect_time_of_cpl_gateway_selection_failure_for_index_page'
+    </if>
+    <if
+      test="fieldName == 'allCPLRows_time'.toString()">
+      function_part = 'allCPLRows_time'
+    </if>
+    <if
+      test="fieldName == 'collect_time_of_cpl_auto_refund'.toString()">
+      function_part = 'collect_time_of_cpl_auto_refund'
+    </if>
+    <if
+      test="fieldName == 'collect_time_of_cpl_gateway_outage_for_index_page'.toString()">
+      function_part = 'collect_time_of_cpl_gateway_outage_for_index_page'
+    </if>
+  </select>
+
+  <select id="getCountByPeriod" resultType="int">
+    SELECT count(*)
+    <if test="dbName == 'commonPurchaseLog'.toString()">
+      FROM commonPurchaseLog
+    </if>
+    <if test="dbName == 'CPLISCRefundLog'.toString()">
+      FROM CPLISCRefundLog
+    </if>
+    <if test="dbName == 'CPLAutorenewalLog'.toString()">
+      FROM CPLGatewaySelectionFailureForAutorenewal
+    </if>
+    <where>
+      <if test="startDate != null">
+        and date_entered >= #{startDate}
+      </if>
+      <if test="endDate != null">
+        AND date_entered &lt;= #{endDate}
+      </if>
+    </where>
+  </select>
+
+  <select id="get_cpl_exception_monitor_count_by_period" resultType="int">
+    WITH CTE
+    (gatewayActionType,errorid,order_id,shopper_id,response_code,reason_code,date_entered,source,processor,
+    payment,payment_type,billing_country_code,transactionCurrencyType)
+    AS
+    (
+    SELECT gatewayActionType,errorid,
+    order_id,shopper_id,response_code,reason_code,date_entered,processor,
+    payment,payment_type,billing_country_code,transactionCurrencyType,source
+    FROM commonPurchaseLogWithSomeKeyFields c
+    WHERE date_entered > #{startDate} AND date_entered &lt; #{endDate}
+    and source not like '%billingagent%'
+    and response_code=#{response_code} and reason_code=#{reason_code}
+    )
+
+    select count(*) from (
+    select
+    b.order_id,b.shopper_id,b.response_code,b.reason_code,b.processor,b.payment,b.payment_type,
+    b.billing_country_code,b.transactionCurrencyType,b.gatewayActionType,b.source
+    from (
+    select c.order_id,c.shopper_id,c.response_code,c.reason_code,processor,
+    c.payment,c.payment_type,c.date_entered,
+    c.billing_country_code,c.transactionCurrencyType, g.gatewayActionTypeDescription
+    gatewayActionType,
+    case when source like 'P3PW%' then 'Payweb'
+    when source like '%payweb%' then 'Payweb'
+    when source like '%billingagent%' then 'BillingAgent'
+    else source
+    end as 'source'
+    from
+    (
+    select x.shopper_id,x.date_entered,MIN(x.errorid) AS eid
+    from CTE x
+    group by x.shopper_id,x.date_entered
+    ) as A
+    left join commonPurchaseLogWithSomeKeyFields c on A.eid = C.errorid
+    join gatewayActionType G on g.gatewayActionTypeID=c.gatewayActionType
+    ) b
+    group by
+    b.order_id,b.shopper_id,b.response_code,b.reason_code,b.processor,b.payment,b.payment_type,
+    b.billing_country_code,b.transactionCurrencyType,b.gatewayActionType,b.source) xx
+  </select>
+
+  <select id="get_cpl_autorefund_logs_count_by_period" resultType="int">
+    SELECT count(*)
+    FROM autoRefund
+    <where>
+      <if test="startDate != null">
+        and PRIOR_TIME > #{startDate}
+      </if>
+      <if test="endDate != null">
+        AND PRIOR_TIME &lt;= #{endDate}
+      </if>
+    </where>
+  </select>
+
+  <select id="get_EComm_error_count_by_period" resultType="int">
+    SELECT count(*)
+    FROM ECommErrorsForSOAPAPIReseller
+    <where>
+      <if test="startDate != null">
+        and date_entered >= #{startDate}
+      </if>
+      <if test="endDate != null">
+        AND date_entered &lt; #{endDate}
+      </if>
+    </where>
+  </select>
+
+  <select id="getCPLAutorenewalCountByLatestSnapshotId" resultType="int">
+    SELECT count(*)
+    FROM CPLGatewaySelectionFailureForAutorenewal
+    WHERE snapshot_Id=(select max(snapshot_Id) from [CPLGatewaySelectionFailureForAutorenewal] where
+    date_entered >
+    GETDATE()-3)
+  </select>
+
+  <select id="getCPLISCRefundLogCountByLatestSnapshotId" resultType="int">
+    SELECT count(*)
+    FROM CPLISCRefundLog
+    WHERE snapshot_Id=(select max(snapshot_Id) from [CPLISCRefundLog] where date_entered >
+    GETDATE()-3)
+  </select>
+
+  <select id="getErrorPurchaseCountByLatestSnapshotId" resultType="int">
+    SELECT count(*)
+    FROM commonPurchaseLog
+    WHERE snapshot_Id=(select max(snapshot_Id) from commonPurchaseLog where date_entered >
+    GETDATE()-3)
+  </select>
+
+  <select id="getALLCPLAutorenewalLogsByPeriod"
+          resultType="com.godaddy.ecomm.base.cpl.CPLGatewaySelectionFailureForAutorenewal">
+    SELECT *
+    FROM CPLGatewaySelectionFailureForAutorenewal
+    <where>
+      <if test="startDate != null">
+        date_entered >= #{startDate}
+      </if>
+      <if test="endDate != null">
+        AND date_entered &lt;= #{endDate}
+      </if>
+    </where>
+    ORDER BY order_id DESC
+    OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+  </select>
+
+  <select id="getGatewayOutageDatas"
+    resultType="com.godaddy.ecomm.base.cpl.CommonPurchaseLogWithSomeKeyFields">
+    SELECT *
+    FROM monitor_cpl_payment_gateway_outage b
+
+    <if test="amount != -1 and which_column!=null">
+      order by ${which_column} ${sort_way}
+      OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+    </if>
+    <if test="amount != -1 and which_column==null">
+      order by b.processor ${sort_way}
+      OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+    </if>
+
+    <if test="amount == -1 and which_column!=null">
+      order by ${which_column} ${sort_way}
+    </if>
+    <if test="amount == -1 and which_column==null">
+      order by b.processor ${sort_way}
+    </if>
+  </select>
+
+  <select id="get_cpl_gateway_selection_failure_details_logs"
+          resultType="com.godaddy.ecomm.base.cpl.CPLGatewaySelectionFailureForAutorenewal">
+    SELECT order_id,date_entered,response_code,reason_code,gateway_raw,payment,
+    payment_type,billing_country_code,transactionCurrencyType
+    FROM commonPurchaseLogWithSomeKeyFields
+    <where>
+      <if test="order_id != null">
+        order_id = #{order_id}
+      </if>
+      <if test="shopper_id != null">
+        shopper_id = #{shopper_id}
+      </if>
+    </where>
+    ORDER BY date_entered
+    OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+  </select>
+
+
+  <select id="get_EComm_error_logs_by_period" resultType="com.godaddy.ecomm.base.cpl.CommonPurchaseLogWithSomeKeyFields">
+    SELECT *
+    FROM ECommErrorsForSOAPAPIReseller
+    <where>
+      <if test="startDate != null">
+        and date_entered >= #{startDate}
+      </if>
+      <if test="endDate != null">
+        AND date_entered &lt; #{endDate}
+      </if>
+    </where>
+    ORDER BY errorid DESC
+    OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+  </select>
+
+  <select id="get_all_cpl_exception_monitor_logs_by_period"
+          resultType="com.godaddy.ecomm.base.cpl.CommonPurchaseLogWithSomeKeyFields">
+    WITH CTE
+    (gatewayActionType,errorid,order_id,shopper_id,response_code,reason_code,date_entered,source,processor,
+    payment,payment_type,billing_country_code,transactionCurrencyType)
+    AS
+    (
+    SELECT gatewayActionType,errorid,
+    order_id,shopper_id,response_code,reason_code,date_entered,processor,
+    payment,payment_type,billing_country_code,transactionCurrencyType,source
+    FROM commonPurchaseLogWithSomeKeyFields c
+    WHERE date_entered > #{startDate} AND date_entered &lt; #{endDate}
+    and source not like '%billingagent%'
+    and response_code=#{response_code} and reason_code=#{reason_code}
+    )
+
+    select
+    b.order_id,b.shopper_id,b.response_code,b.reason_code,b.processor,b.payment,b.payment_type,
+    b.billing_country_code,b.transactionCurrencyType,b.gatewayActionType,b.source
+    from (
+    select c.order_id,c.shopper_id,c.response_code,c.reason_code,processor,
+    c.payment,c.payment_type,c.date_entered,
+    c.billing_country_code,c.transactionCurrencyType, g.gatewayActionTypeDescription
+    gatewayActionType,
+    case when source like 'P3PW%' then 'Payweb'
+    when source like '%payweb%' then 'Payweb'
+    when source like '%billingagent%' then 'BillingAgent'
+    else source
+    end as 'source'
+    from
+    (
+    select x.shopper_id,x.date_entered,MIN(x.errorid) AS eid
+    from CTE x
+    group by x.shopper_id,x.date_entered
+    ) as A
+    left join commonPurchaseLogWithSomeKeyFields c on A.eid = C.errorid
+    join gatewayActionType G on g.gatewayActionTypeID=c.gatewayActionType
+    ) b
+    group by
+    b.order_id,b.shopper_id,b.response_code,b.reason_code,b.processor,b.payment,b.payment_type,
+    b.billing_country_code,b.transactionCurrencyType,b.gatewayActionType,b.source
+
+    <if test="amount != -1">
+      order by
+      b.order_id,b.shopper_id,b.response_code,b.reason_code,b.processor,b.payment,b.payment_type,
+      b.billing_country_code,b.transactionCurrencyType,b.gatewayActionType,b.source
+      OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+    </if>
+  </select>
+
+  <select id="get_cpl_exception_logs_by_sort"
+          resultType="com.godaddy.ecomm.base.cpl.CommonPurchaseLogWithSomeKeyFields">
+    WITH CTE (gatewayActionType,errorid,order_id,shopper_id,response_code,reason_code,date_entered,
+    source,processor,payment,payment_type,billing_country_code,transactionCurrencyType)
+    AS
+    (
+    SELECT gatewayActionType,errorid, order_id,shopper_id,response_code,reason_code,date_entered,
+    processor,payment,payment_type,billing_country_code,transactionCurrencyType,source
+    FROM commonPurchaseLogWithSomeKeyFields c
+    WHERE date_entered > #{startDate} AND date_entered &lt; #{endDate}
+    and source not like '%billingagent%'
+    and response_code=#{response_code} and reason_code=#{reason_code}
+    )
+
+    select
+    b.order_id,b.shopper_id,b.response_code,b.reason_code,b.processor,b.payment,b.payment_type,
+    b.billing_country_code,b.transactionCurrencyType,b.gatewayActionType,b.source
+    from (
+    select c.order_id,c.shopper_id,c.response_code,c.reason_code,processor,
+    c.payment,c.payment_type,
+    c.billing_country_code,c.transactionCurrencyType, g.gatewayActionTypeDescription
+    gatewayActionType,
+    case when source like 'P3PW%' then 'Payweb'
+    when source like '%payweb%' then 'Payweb'
+    when source like '%billingagent%' then 'BillingAgent'
+    else source
+    end as 'source'
+    from
+    (
+    select x.shopper_id,x.date_entered,MIN(x.errorid) AS eid
+    from CTE x
+    group by x.shopper_id,x.date_entered
+    ) as A
+    left join commonPurchaseLogWithSomeKeyFields c on A.eid = C.errorid
+    join gatewayActionType G on g.gatewayActionTypeID=c.gatewayActionType
+    ) b
+    group by
+    b.order_id,b.shopper_id,b.response_code,b.reason_code,b.processor,b.payment,b.payment_type,
+    b.billing_country_code,b.transactionCurrencyType,b.gatewayActionType,b.source
+
+    <if test="amount != -1 and which_column!=null">
+      order by ${which_column} ${sort_way}
+      OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+    </if>
+    <if test="amount != -1 and which_column==null">
+      order by b.order_id ${sort_way}
+      OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+    </if>
+
+    <if test="amount == -1 and which_column!=null">
+      order by ${which_column} ${sort_way}
+    </if>
+    <if test="amount == -1 and which_column==null">
+      order by b.order_id ${sort_way}
+    </if>
+  </select>
+
+  <select id="get_EComm_error_logs_by_sort"
+    resultType="com.godaddy.ecomm.base.cpl.CommonPurchaseLogWithSomeKeyFields">
+    SELECT *
+    FROM ECommErrorsForSOAPAPIReseller b
+    <where>
+      <if test="startDate != null">
+        and date_entered >= #{startDate}
+      </if>
+      <if test="endDate != null">
+        AND date_entered &lt; #{endDate}
+      </if>
+    </where>
+    <if test="amount != -1 and which_column!=null">
+      order by ${which_column} ${sort_way}
+      OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+    </if>
+    <if test="amount != -1 and which_column==null">
+      order by b.order_id ${sort_way}
+      OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+    </if>
+
+    <if test="amount == -1 and which_column!=null">
+      order by ${which_column} ${sort_way}
+    </if>
+    <if test="amount == -1 and which_column==null">
+      order by b.order_id ${sort_way}
+    </if>
+  </select>
+
+  <select id="get_error_description" resultType="string">
+    SELECT error_description
+    FROM commonResponseReason
+    where response_code=#{response_code} and reason_code=#{reason_code}
+  </select>
+
+  <select id="getCPLISCRefundLogsByPeriod" resultType="com.godaddy.ecomm.base.cpl.CPLISCRefundLog">
+    SELECT *
+    FROM CPLISCRefundLog
+    WHERE date_entered > GETDATE()-3
+    <if test="startDate != null">
+      and date_entered > #{startDate}
+    </if>
+    <if test="endDate != null">
+      AND date_entered &lt; #{endDate}
+    </if>
+    ORDER BY order_id DESC
+    OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+  </select>
+
+  <select id="get_cpl_autorefund_logs_by_period" resultType="com.godaddy.ecomm.base.cpl.AutoRefund">
+    SELECT *
+    FROM autoRefund
+    <where>
+      <if test="startDate != null">
+        and PRIOR_TIME > #{startDate}
+      </if>
+      <if test="endDate != null">
+        AND PRIOR_TIME &lt;= #{endDate}
+      </if>
+    </where>
+    ORDER BY errorid DESC
+    OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+  </select>
+
+  <select id="getErrorPurchaseLogsByPeriod"
+          resultType="com.godaddy.ecomm.base.cpl.ErrorPurchaseLog">
+    SELECT *
+    FROM commonPurchaseLog
+    WHERE date_entered > GETDATE()-3
+    <if test="startDate != null">
+      and date_entered > #{startDate}
+    </if>
+    <if test="endDate != null">
+      AND date_entered &lt; #{endDate}
+    </if>
+    ORDER BY order_id DESC
+    OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+  </select>
+
+
+</mapper>

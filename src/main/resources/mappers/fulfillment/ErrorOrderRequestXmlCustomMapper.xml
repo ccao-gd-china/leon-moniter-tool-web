@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.godaddy.ecomm.dao.fulfillment.ErrorOrderRequestXmlCustomMapper">
+  <select id="getAllPrivateLabelId" resultType="String">
+    SELECT DISTINCT privateLabelId
+    FROM errorOrderRequestXml
+    <if test="snapshot_id != 0">
+      WHERE snapshot_id = #{snapshot_id}
+    </if>
+    <if test="snapshot_id == 0">
+      WHERE snapshot_id = (
+      SELECT TOP (1)
+      snapshot_id
+      FROM snapshot
+      ORDER BY snapshot_id DESC)
+    </if>
+  </select>
+
+  <select id="getErrorOrderRequestsNum" resultType="int">
+    SELECT COUNT(*)
+    FROM errorOrderRequestXml
+    <where>
+      <if test="privateLabelId != 0">
+        AND privateLabelId = #{privateLabelId}
+      </if>
+      <if test="startDate != null">
+        and createDate >= #{startDate}
+      </if>
+      <if test="endDate != null">
+        AND createDate &lt;= #{endDate}
+      </if>
+      <if test="filterSeverity != null">
+        and (CASE  when e.messageText like '%COM Exception occured%' then 'S1'
+        when e.messageText like '%Request failed tamperproof validation%' then 'S1'
+        when e.messageText = 'There was a problem authorizing your credit. Please verify your payment information or use an alternate form of payment.' then 'S3'
+        else 'Unkown' end ) = #{filterSeverity}
+      </if>
+      <if test="filterMessage != null">
+        and e.messageText like #{filterMessage}
+      </if>
+      <if test="filterPLID != null">
+        and e.privateLabelId = #{filterPLID}
+      </if>
+    </where>
+  </select>
+
+  <select id="getLatestSnapshot_id" resultType="int">
+    SELECT max (snapshot_id)
+    FROM snapshot
+  </select>
+
+  <select id="getErrorOrderRequests"
+    resultType="com.godaddy.ecomm.base.fulfillment.ErrorOrderRequestXml">
+    SELECT e.*,
+    CASE  when e.messageText like '%COM Exception occured%' then 'S1'
+    when e.messageText like '%Request failed tamperproof validation%' then 'S1'
+    when e.messageText = 'There was a problem authorizing your credit. Please verify your payment information or use an alternate form of payment.' then 'S3'
+    else 'Unkown' end as severity
+    FROM errorOrderRequestXml e
+    <where>
+      <if test="privateLabelId != 0">
+        AND e.privateLabelId = #{privateLabelId}
+      </if>
+      <if test="startDate != null">
+        and e.createDate >= #{startDate}
+      </if>
+      <if test="endDate != null">
+        AND e.createDate &lt;= #{endDate}
+      </if>
+      <if test="filterSeverity != null">
+        and (CASE  when e.messageText like '%COM Exception occured%' then 'S1'
+        when e.messageText like '%Request failed tamperproof validation%' then 'S1'
+        when e.messageText = 'There was a problem authorizing your credit. Please verify your payment information or use an alternate form of payment.' then 'S3'
+        else 'Unkown' end ) = #{filterSeverity}
+      </if>
+      <if test="filterMessage != null">
+        and e.messageText like #{filterMessage}
+      </if>
+      <if test="filterPLID != null">
+        and e.privateLabelId = #{filterPLID}
+      </if>
+    </where>
+    <if test="sortBySeverity == 0 and sortByPLID == 0 and sortByMessage ==0">
+      ORDER BY e.order_id DESC
+    </if>
+
+    <if test="sortBySeverity == 1">
+      ORDER BY severity DESC
+    </if>
+    <if test="sortBySeverity == 2">
+      ORDER BY severity ASC
+    </if>
+
+    <if test="sortByPLID == 1">
+      ORDER BY e.privateLabelId DESC
+    </if>
+    <if test="sortByPLID == 2">
+      ORDER BY e.privateLabelId ASC
+    </if>
+
+    <if test="sortByMessage == 1">
+      ORDER BY e.messageText DESC
+    </if>
+    <if test="sortByMessage == 2">
+      ORDER BY e.messageText ASC
+    </if>
+
+    OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
+  </select>
+
+  <select id="getLatestErrorOrderRequests"
+    resultType="com.godaddy.ecomm.base.fulfillment.ErrorOrderRequestXml">
+    SELECT  *,
+    CASE when messageText like '%COM Exception occured%' then 'S1'
+    when messageText like '%Request failed tamperproof validation%' then 'S1'
+    when messageText = 'There was a problem authorizing your credit. Please verify your payment information or use an alternate form of payment.' then 'S3'
+    else 'Unkown' end as severity
+    FROM errorOrderRequestXml
+    where createDate=(select max(createDate) from errorOrderRequestXml)
+  </select>
+
+
+</mapper>

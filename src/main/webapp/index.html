@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Data Monitor</title>
+  <!--css files-->
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/bootstrap-theme.min.css" rel="stylesheet">
+  <link href="css/jquery.dataTables.min.css" rel="stylesheet">
+  <link href="css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+  <link href="css/godaddy-salesheader.min.css" rel="stylesheet">
+  <link href="css/godaddy-uncore-sale.min.css" rel="stylesheet">
+  <link rel="shortcut icon" href="images/godaddy.ico">
+
+  <style>
+    .title {
+      auto;
+      margin-left: 30px;
+      color: #70ac00;
+      font-family: "arial", sans-serif;
+      font-size: 1.2em;
+    }
+
+    ul {
+      display: inline-block;
+    }
+
+    body {
+      color: black;
+      background-color: #EEE5DE;
+    }
+
+    .container {
+      width: 100%;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<p><br/></p>
+<div class="container">
+  <h1 align="center">Data Monitor</h1>
+
+  <div class='container'>
+    <p class="title">Reseller API fulfillment:</p>
+    <ul>
+      <li>
+        <div id="fulfillment_time"></div>
+      </li>
+      <li>
+        <div id="fulfillment_link"></div>
+      </li>
+    </ul>
+  </div>
+  <br>
+
+  <div class='container'>
+    <p class="title">Incorrect gateway action type for BA:</p>
+    <ul>
+      <li>
+        <div id="incorrect_gateway_time"></div>
+      </li>
+      <li>
+        <div id="incorrect_gateway_link"></div>
+      </li>
+    </ul>
+  </div>
+  <br/>
+
+  <div class='container'>
+    <p class="title">Duplicate ISC refund:</p>
+    <ul>
+      <li>
+        <div id="duplicate_ISC_time"></div>
+      </li>
+      <li>
+        <div id="duplicate_ISC_link"></div>
+      </li>
+    </ul>
+  </div>
+  <br/>
+
+  <div class='container'>
+    <p class="title">Gateway selection failure:</p>
+    <ul>
+      <li>
+        <div id="gateway_selection_failure_time"></div>
+      </li>
+      <li>
+        <div id="gateway_selection_failure_link"></div>
+      </li>
+    </ul>
+  </div>
+  <br/>
+
+  <div class='container'>
+    <p class="title">Auto refund monitor:</p>
+    <ul>
+      <li>
+        <div id="auto_refund_time"></div>
+      </li>
+      <li>
+        <div id="auto_refund_link"></div>
+      </li>
+    </ul>
+  </div>
+  <br/>
+
+  <div class='container'>
+    <p class="title">Exception monitor:</p>
+    <ul>
+      <li>
+        <div id="exception_monitor_time"></div>
+      </li>
+      <li>
+        <div id="exception_monitor_str"></div>
+      </li>
+    </ul>
+  </div>
+  <br/>
+
+  <div class='container'>
+    <p class="title">Gateway outage monitor:</p>
+    <ul>
+      <li>
+        <div id="gateway_outage_time"></div>
+      </li>
+      <li>
+        <div id="gateway_outage_link"></div>
+      </li>
+    </ul>
+  </div>
+
+  <table class="display" id="myTable">
+    <thead></thead>
+    <tfoot></tfoot>
+    <tbody>
+    </tbody>
+  </table>
+
+</div>
+<div id="footer">
+  <div>
+    <div class="uxh-footer" data-reactroot="" data-reactid="1" data-react-checksum="1895965148">
+      <div class="uxh-footer-support" data-reactid="2">
+        <div class="uxh-container" data-reactid="3">
+          <h4 data-reactid="4">
+            <div data-reactid="5">
+                                <span data-reactid="8">
+                                    Any questions, please contact Jiachun Wang.<br/>
+                                    Email: jwang1@godaddy.com<br/>
+                                    Slack: <a href="https://godaddy.slack.com/messages/@jwang1"
+                                              style="color:inherit; text-decoration:none;">
+                                            https://godaddy.slack.com/messages/@jwang1</a>
+                                </span><br/>
+            </div>
+          </h4>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!--js files-->
+<script src="js/jquery-1.8.3.min.js"></script>
+<script src="js/jquery.dataTables.min.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/bootstrap-datetimepicker.min.js"></script>
+<script>
+  $(document).ready(function () {
+    $.ajax({
+      url: "/MonitorTool/index_servlet",
+      type: "POST",
+      success: function (data) {
+        //Reseller API fulfillment:
+        document.getElementById("fulfillment_time").innerHTML = "Last update: " +
+          data.fulfillment_time;
+        if (data.fulfillment_count == 0) {
+          document.getElementById("fulfillment_link").innerHTML = "Errors found: None";
+        } else {
+          document.getElementById("fulfillment_link").innerHTML = "Errors found:" +
+            "<a href=" + data.fulfillment_link + ">" + data.fulfillment_count + "</a>";
+        }
+
+        //Incorrect gateway action type for BA:
+        document.getElementById("incorrect_gateway_time").innerHTML = "Last update: " +
+          data.incorrect_gateway_time;
+        if (data.incorrect_gateway_count == 0) {
+          document.getElementById("incorrect_gateway_link").innerHTML = "&nbsp;<a href=" + data.incorrect_gateway_link + ">Link</a>"+
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Errors found: None";
+        } else {
+          document.getElementById("incorrect_gateway_link").innerHTML = "Errors found:" +
+            "<a href=" + data.incorrect_gateway_link + ">" + data.incorrect_gateway_count + "</a>";
+        }
+
+        //Duplicate ISC refund:
+        document.getElementById("duplicate_ISC_time").innerHTML = "Last update: " +
+          data.duplicate_ISC_time;
+        if (data.duplicate_ISC_count == 0) {
+          document.getElementById("duplicate_ISC_link").innerHTML = "&nbsp;<a href=" + data.duplicate_ISC_link + ">Link</a>"+
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Errors found: None";
+        } else {
+          document.getElementById("duplicate_ISC_link").innerHTML = "Errors found:" +
+            "<a href=" + data.duplicate_ISC_link + ">" + data.duplicate_ISC_count + "</a>";
+        }
+
+        //Gateway selection failure:
+        document.getElementById("gateway_selection_failure_time").innerHTML = "Last update: " +
+          data.gateway_selection_failure_time;
+        if (data.gateway_selection_failure_count == 0) {
+          document.getElementById("gateway_selection_failure_link").innerHTML = "&nbsp;<a href=" + data.gateway_selection_failure_link + ">Link</a>"+
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Errors found: None";
+        } else {
+          document.getElementById("gateway_selection_failure_link").innerHTML = "Errors found:" +
+            "<a href=" + data.gateway_selection_failure_link + ">" + data.gateway_selection_failure_count + "</a>";
+        }
+
+        //Auto refund monitor:
+        document.getElementById("auto_refund_time").innerHTML = "Last update: " +
+          data.auto_refund_time;
+        if (data.auto_refund_str.length == 0) {
+          document.getElementById("auto_refund_link").innerHTML = "&nbsp;<a href=" + data.auto_refund_link + ">Link</a>"+
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Errors found: None";
+        } else {
+          document.getElementById("auto_refund_link").innerHTML = data.auto_refund_str +
+            "&nbsp;<a href=" + data.auto_refund_link + ">Link</a>";
+        }
+
+        //exception_monitor_str:
+        document.getElementById("exception_monitor_time").innerHTML = "Last update: " + data.exception_monitor_time;
+        if (data.exception_monitor_str.length == 0) {
+          document.getElementById("exception_monitor_str").innerHTML = "&nbsp;<a href=" + data.exception_monitor_link + ">Link</a>"+
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Errors found: None";
+        } else {
+
+          var exception_monitor_div = document.getElementById("exception_monitor_str");
+          if (data.exception_monitor_str.indexOf('@#$%^&') >= 0) {
+            var success_fail_array = data.exception_monitor_str.split("@#$%^&");
+            exception_monitor_div.innerHTML = "<span style='float:left'>Errors found:</span><br/><span style='float:left'>" + success_fail_array[0] + "</span><br/>";
+
+            var fail_array = success_fail_array[1].split("^&*");
+            for (var i = 0; i < fail_array.length; i++) {
+              var content_link = [];
+              content_link = fail_array[i].split("#linkSeparateFlag#");
+
+              var para = document.createElement("span");
+              para.setAttribute("style", "float:left");
+              var text1 = document.createTextNode(content_link[0]);
+              para.appendChild(text1);
+              exception_monitor_div.appendChild(para);
+
+              var a_struct = document.createElement("a");
+              a_struct.setAttribute("style", "float:left");
+              a_struct.setAttribute("href", content_link[1]);
+              var text2 = document.createTextNode("\u00A0Link");
+              a_struct.appendChild(text2);
+              exception_monitor_div.appendChild(a_struct);
+
+              if (i != fail_array.length - 1) {
+                exception_monitor_div.appendChild(document.createElement("br"));
+              }
+            }
+
+          } else {
+            if (data.exception_monitor_str.indexOf('^&*') >= 0) {
+              var fail_array = data.exception_monitor_str.split("^&*");
+              exception_monitor_div.innerHTML = "<span style='float:left'>Errors found:</span><br/>";
+              for (var i = 0; i < fail_array.length; i++) {
+                var content_link = [];
+                content_link = fail_array[i].split("#linkSeparateFlag#");
+
+                var para = document.createElement("span");
+                para.setAttribute("style", "float:left");
+                var text1 = document.createTextNode(content_link[0]);
+                para.appendChild(text1);
+                exception_monitor_div.appendChild(para);
+
+                var a_struct = document.createElement("a");
+                a_struct.setAttribute("style", "float:left");
+                a_struct.setAttribute("href", content_link[1]);
+                var text2 = document.createTextNode("\u00A0Link");
+                a_struct.appendChild(text2);
+                exception_monitor_div.appendChild(a_struct);
+
+                if (i != fail_array.length - 1) {
+                  exception_monitor_div.appendChild(document.createElement("br"));
+                }
+              }
+            } else {
+              exception_monitor_div.innerHTML = "<span style='float:left'>Errors found:</span><br/>" + data.exception_monitor_str + "<br/>";
+            }
+          }
+        }
+
+        //Gateway outage monitor:
+        document.getElementById("gateway_outage_time").innerHTML = "Last update: " +
+          data.gateway_outage_time;
+
+        if (data.gateway_outage_str.length == 0) {
+          document.getElementById("gateway_outage_link").innerHTML = "&nbsp;<a href=" + data.gateway_outage_link + ">Link</a>" +
+            "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Errors found: None";
+        } else {
+          document.getElementById("gateway_outage_link").innerHTML = "Gateway is down:" +
+            "&nbsp;<a href=" + data.gateway_outage_link + ">Link</a>";
+        }
+      },
+      dataType: "json"
+    });
+  });
+</script>
+</body>
+</html>
