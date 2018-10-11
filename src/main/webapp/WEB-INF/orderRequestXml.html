@@ -10,6 +10,7 @@
   <link href="css/bootstrap-datetimepicker.min.css" rel="stylesheet">
   <link href="css/godaddy-salesheader.min.css" rel="stylesheet">
   <link href="css/godaddy-uncore-sale.min.css" rel="stylesheet">
+  <link href="css/font-awesome.min.css" rel="stylesheet">
   <link rel="shortcut icon" href="images/godaddy.ico">
   <style>
     div.container {
@@ -119,7 +120,7 @@
               </select>
             </th>
             <th>PLID :
-              <input type="text" id="filter_plid" value="">
+                <select id="filter_plid"></select>
             </th>
           </tr>
         </table>
@@ -135,7 +136,7 @@
             </td>
             <td style="padding-right: 10px"></td>
             <td>
-              <button type="submit" class="btn btn-primary" data-loading-text="Loading..." id="download" >DOWNLOAD</button>
+              <button type="submit" class="btn btn-primary" id="download" >DOWNLOAD</button>
             </td>
         </table>
         <br/>
@@ -144,11 +145,32 @@
           <tr>
             <th width="25"></th>
             <th width="75">Order Id</th>
-            <th width="75">PLID</th>
-            <th width="75">Severity</th>
+            <th width="75" id="searchByPLID">
+              <a href="javascript:;" style="text-decoration:none;">
+                <span>PLID</span>
+                <em>
+                  <i id="plidSort" class="" aria-hidden="true"></i>                                    
+                </em>
+              </a>
+            </th>
+            <th width="100" id="searchBySeverity" style="widows: 100px;">
+              <a href="javascript:;" style="text-decoration:none;">
+                <span>Severity</span>
+                <em>
+                  <i id="severitySort" class="" aria-hidden="true"></i>
+                </em>
+              </a>
+            </th>
             <th width="200">Create Date</th>
             <th width="100">Order Status</th>
-            <th>Error Message</th>
+            <th id="searchByMessage">
+              <a href="javascript:;" style="text-decoration:none">
+                <span>Error Message</span>
+                <em>
+                  <i id="errorMessageSort" class="" aria-hidden="true"></i>
+                </em>
+              </a>
+            </th>
           </tr>
           </thead>
         </table>
@@ -184,6 +206,9 @@
 <script src="js/bootstrap-datetimepicker.min.js"></script>
 <script>
   var snapshotId;
+  var sortPLID = 0;
+  var sortSeverity = 0;
+  var sortMessage = 0;
   $(document).ready(function () {
     var table = renderer("/MonitorTool/FulfillmentServlet");
     $('#errorOrderRequests').on('draw.dt', function () {
@@ -193,14 +218,14 @@
 
     table.on('xhr', function () {
       var json = table.ajax.json();
-      <!--snapshotId = json.snapshotId;-->
-      <!--if(snapshotId != $('#snapshotId').val()) {-->
-      <!--$('#snapshotId').val(snapshotId);-->
-      <!--var arr =  json.privateLabelIds;-->
-      <!--if(arr){-->
-      <!--createOptions(arr);-->
-      <!--}-->
-      <!--}-->
+      // <!--snapshotId = json.snapshotId;-->
+      // <!--if(snapshotId != $('#snapshotId').val()) {-->
+      // <!--$('#snapshotId').val(snapshotId);-->
+      // <!--var arr =  json.privateLabelIds;-->
+      // <!--if(arr){-->
+      // <!--createOptions(arr);-->
+      // <!--}-->
+      // <!--}-->
       var selectEle = $('#privateLabelId');
       if (selectEle.children().length <= 1) {
         var arr = json.privateLabelIds;
@@ -220,7 +245,7 @@
       }
     });
 
-    <!--initialize datetimepicker()-->
+    // <!--initialize datetimepicker()-->
     $('#datetimepicker6').datetimepicker({
       weekStart: 1,
       todayBtn: 1,
@@ -240,7 +265,7 @@
       forceParse: 0
     });
 
-    <!--row expand and collapse-->
+    // <!--row expand and collapse-->
     $('#errorOrderRequests tbody').on('click', 'td.details-control', function () {
 
       var tr = $(this).closest('tr');
@@ -289,7 +314,7 @@
     }
 
 
-    <!--search event-->
+    // <!--search event-->
     $('#allErrorOrders').on('click', function () {
       $('#startDate').val('');
       $('#endDate').val('');
@@ -298,7 +323,7 @@
       table.search(stringifyParams('all_existing_error_orders')).draw();
     });
 
-    <!--search event-->
+    // <!--search event-->
     $('#latestErrorOrders').on('click', function () {
       $('#startDate').val('');
       $('#endDate').val('');
@@ -307,12 +332,76 @@
       table.search(stringifyParams('latest_error_orders')).draw();
     });
 
-    <!--search event-->
+    // <!--search event-->
     $('#searchValue').on('click', function () {
-
       table.search(stringifyParams()).draw();
     });
+
+    // <!--search event-->
+    $('#searchByPLID').on('click', function () {
+      table.search(stringifyParamsBySort('',1)).draw();
+      clearSortClass();
+      changePLIDSortClass();
+    });
+
+    // <!--search event-->
+    $('#searchBySeverity').on('click', function () {
+      table.search(stringifyParamsBySort('',2)).draw();
+      clearSortClass();
+      changeSeveritySortClass();
+    });
+
+    // <!--search event-->
+    $('#searchByMessage').on('click', function () {
+      table.search(stringifyParamsBySort('',3)).draw();
+      clearSortClass();
+      changeErrorMessageSortClass();
+    });
   });
+
+  function getAllPLID(){
+    $.ajax({
+      type : "post",
+      dataType : "json",
+      url : "/MonitorTool/getAllPLID",
+      success : function(result){
+        $("#filter_plid").append("<option value=\"\">ALL</option>");
+        for(var i =0;i<result.data.length;i++){
+         $("#filter_plid").append("<option value='"+result.data[i]+"'>"+result.data[i]+"</option>");
+        }
+      }
+    })
+  }
+
+  function clearSortClass(){
+    document.getElementById("plidSort").className = "";
+    document.getElementById("severitySort").className = "";
+    document.getElementById("errorMessageSort").className = "";
+  }
+
+  function changePLIDSortClass(){
+    if(sortPLID ==1){
+      document.getElementById("plidSort").className = "fa fa-sort-desc";
+    }else{
+      document.getElementById("plidSort").className = "fa fa-sort-asc";
+    }
+  }
+
+  function changeSeveritySortClass(){
+    if(sortSeverity==1){
+      document.getElementById("severitySort").className = "fa fa-sort-desc";
+    }else{
+      document.getElementById("severitySort").className = "fa fa-sort-asc";
+    }
+  }
+
+  function changeErrorMessageSortClass(){
+    if(sortMessage==1){
+      document.getElementById("errorMessageSort").className = "fa fa-sort-desc";
+    }else{
+      document.getElementById("errorMessageSort").className = "fa fa-sort-asc";
+    }
+  }
 
   function sendDownloadClient() {
     $.ajax({
@@ -342,11 +431,11 @@
 
   function stringifyParams(version) {
     var Params = {};
-    <!--if(version == 'latest') {-->
-    <!--Params.snapshotId = version;-->
-    <!--}else {-->
-    <!--Params.snapshotId = $('#snapshotId').val();-->
-    <!--}-->
+    // <!--if(version == 'latest') {-->
+    // <!--Params.snapshotId = version;-->
+    // <!--}else {-->
+    // <!--Params.snapshotId = $('#snapshotId').val();-->
+    // <!--}-->
 
     Params.my_flag = version;
     Params.start_date = $('#startDate').val();
@@ -359,8 +448,57 @@
     return JSON.stringify(Params);
   }
 
+  function stringifyParamsBySort(version,sort) {
+    var Params = {};
+    Params.my_flag = version;
+    Params.start_date = $('#startDate').val();
+    Params.end_date = $('#endDate').val();
+    Params.privateLabel_id = $('#privateLabelId option:selected').val();
+    Params.filter_severity = $('#filter_severity option:selected').val();
+    Params.filter_plid = $('#filter_plid').val();
+    Params.filter_message = $('#filter_message').val();
+    if(sort == 1){
+      if(sortPLID == 1){
+        Params.sort_plid = 2;
+        sortPLID = 2;
+        sortSeverity=0;
+        sortMessage =0;
+      }else{
+        Params.sort_plid = 1;
+        sortPLID = 1;
+        sortSeverity=0;
+        sortMessage =0;
+      }
+    }else if(sort == 2){
+       if(sortSeverity == 1){
+        Params.sort_severity = 2;
+        sortSeverity = 2;
+        sortPLID=0;
+        sortMessage =0;
+      }else{
+        Params.sort_severity = 1;
+        sortSeverity = 1;
+        sortPLID=0;
+        sortMessage =0;
+      }
+    }else{
+       if(sortMessage == 1){
+        Params.sort_message = 2;
+        sortMessage = 2;
+        sortPLID=0;
+        sortSeverity =0;
+      }else{
+        Params.sort_message = 1;
+        sortMessage = 1;
+        sortPLID=0;
+        sortSeverity =0;
+      }
+    }
 
-  <!--function to post request and render table-->
+    return JSON.stringify(Params);
+  }
+
+  // <!--function to post request and render table-->
   function renderer(url) {
     return $('#errorOrderRequests').DataTable({
       "dom": 'lr<"snapshotDate">tip',
@@ -389,10 +527,10 @@
     });
   }
 
-  <!--function to add child rows-->
+  // <!--function to add child rows-->
   function childRows(d) {
 
-    <!-- `d` is the original data object for the row-->
+    // <!-- `d` is the original data object for the row-->
     return '<table cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">' +
       '<tr>' +
       '<td><b>Error Message</b>:</td>' +

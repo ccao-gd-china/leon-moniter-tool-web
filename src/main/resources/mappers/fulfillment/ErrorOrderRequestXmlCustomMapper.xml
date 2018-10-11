@@ -109,6 +109,12 @@
     OFFSET #{startIndex} ROWS FETCH NEXT #{amount} ROWS ONLY
   </select>
 
+  <select id="getAllPLID" resultType="String">
+    SELECT privateLabelId
+    FROM errorOrderRequestXml
+    group by privateLabelId
+  </select>
+
   <select id="getLatestErrorOrderRequests"
     resultType="com.godaddy.ecomm.base.fulfillment.ErrorOrderRequestXml">
     SELECT  *,

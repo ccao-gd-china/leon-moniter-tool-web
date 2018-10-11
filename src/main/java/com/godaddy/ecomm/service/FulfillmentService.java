@@ -86,6 +86,10 @@ public class FulfillmentService {
     return getErrorOrderRequests(fulfillmentQueryVo);
   }
 
+  public List<String> getAllPLID() throws IOException{
+    return getCustomMapper().getAllPLID();
+  }
+
   private FulfillmentQueryVo parseQueryStr(String queryStr, FulfillmentQueryVo fulfillmentQueryVo)
     throws ParseException {
     JSONObject params = new JSONObject(queryStr);
@@ -144,14 +148,14 @@ public class FulfillmentService {
     }
 
     String filterPlid = params.getString("filter_plid");
-    if (filterSeverity.equals("")) {
+    if (filterPlid.equals("")) {
       fulfillmentQueryVo.setFilterPLID(null);
     } else {
       fulfillmentQueryVo.setFilterPLID(filterPlid);
     }
 
     String filterMessage = params.getString("filter_message");
-    if (filterSeverity.equals("")) {
+    if (filterMessage.equals("")) {
       fulfillmentQueryVo.setFilterMessage(null);
     } else {
       fulfillmentQueryVo.setFilterMessage("%" + filterMessage + "%");

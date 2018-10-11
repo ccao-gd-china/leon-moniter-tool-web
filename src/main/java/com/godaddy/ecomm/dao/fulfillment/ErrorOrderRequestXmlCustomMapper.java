@@ -37,4 +37,6 @@ public interface ErrorOrderRequestXmlCustomMapper extends Mapper {
 
   int getLatestSnapshot_id() throws Exception;
 
+  List<String> getAllPLID();
+
 }
